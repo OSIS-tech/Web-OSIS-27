@@ -1,0 +1,2203 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Admin OSIS - SMAN 27 Garut</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    
+    <style>
+        :root {
+            --bg-primary: #0a0f1a;
+            --bg-secondary: #111827;
+            --bg-card: #1a2234;
+            --bg-card-hover: #1f2942;
+            --accent-primary: #3b82f6;
+            --accent-secondary: #06b6d4;
+            --accent-glow: rgba(59, 130, 246, 0.3);
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --border-color: rgba(59, 130, 246, 0.2);
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        h1, h2, h3, h4 {
+            font-family: 'Space Grotesk', sans-serif;
+        }
+
+        /* Background Pattern */
+        .bg-pattern {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(ellipse at 20% 20%, rgba(59, 130, 246, 0.08) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 80%, rgba(6, 182, 212, 0.06) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 50%, rgba(59, 130, 246, 0.04) 0%, transparent 70%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .grid-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(rgba(59, 130, 246, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(59, 130, 246, 0.03) 1px, transparent 1px);
+            background-size: 50px 50px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* Login Page */
+        .login-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            z-index: 1;
+        }
+
+        .login-card {
+            background: linear-gradient(135deg, var(--bg-card) 0%, var(--bg-secondary) 100%);
+            border: 1px solid var(--border-color);
+            border-radius: 24px;
+            padding: 48px;
+            width: 100%;
+            max-width: 420px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .login-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
+        }
+
+        .login-logo {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 24px;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 32px;
+            font-weight: 700;
+            color: white;
+        }
+
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 14px 18px;
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            color: var(--text-primary);
+            font-size: 15px;
+            font-family: inherit;
+            transition: all 0.3s ease;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 3px var(--accent-glow);
+        }
+
+        .form-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 14px 28px;
+            font-size: 14px;
+            font-weight: 600;
+            font-family: inherit;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent-primary), #2563eb);
+            color: white;
+            width: 100%;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px var(--accent-glow);
+        }
+
+        .btn-secondary {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+        }
+
+        .btn-secondary:hover {
+            background: var(--bg-card-hover);
+            border-color: var(--accent-primary);
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn-sm {
+            padding: 8px 16px;
+            font-size: 13px;
+        }
+
+        /* Dashboard Layout */
+        .dashboard-wrapper {
+            display: none;
+            position: relative;
+            z-index: 1;
+        }
+
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 280px;
+            height: 100vh;
+            background: linear-gradient(180deg, var(--bg-secondary) 0%, var(--bg-primary) 100%);
+            border-right: 1px solid var(--border-color);
+            padding: 24px;
+            overflow-y: auto;
+            z-index: 100;
+            transition: transform 0.3s ease;
+        }
+
+        .sidebar-header {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 24px;
+        }
+
+        .sidebar-logo {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 700;
+            font-size: 18px;
+            color: white;
+        }
+
+        .sidebar-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .sidebar-subtitle {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .nav-section {
+            margin-bottom: 24px;
+        }
+
+        .nav-label {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 12px;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 16px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            border-radius: 12px;
+            margin-bottom: 4px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .nav-item:hover {
+            background: var(--bg-card);
+            color: var(--text-primary);
+        }
+
+        .nav-item.active {
+            background: linear-gradient(135deg, var(--accent-primary), #2563eb);
+            color: white;
+            box-shadow: 0 4px 15px var(--accent-glow);
+        }
+
+        .nav-icon {
+            width: 20px;
+            height: 20px;
+            opacity: 0.8;
+        }
+
+        .main-content {
+            margin-left: 280px;
+            padding: 32px;
+            min-height: 100vh;
+        }
+
+        /* Header */
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px;
+        }
+
+        .page-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .page-subtitle {
+            font-size: 14px;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .user-avatar {
+            width: 44px;
+            height: 44px;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            color: white;
+        }
+
+        .user-info {
+            text-align: right;
+        }
+
+        .user-name {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .user-role {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* Stats Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, var(--bg-card) 0%, var(--bg-secondary) 100%);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 24px;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+            border-color: var(--accent-primary);
+            box-shadow: 0 12px 40px rgba(59, 130, 246, 0.15);
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .stat-card:hover::before {
+            opacity: 1;
+        }
+
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 16px;
+        }
+
+        .stat-value {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 36px;
+            font-weight: 700;
+            color: var(--text-primary);
+            line-height: 1;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: var(--text-muted);
+            margin-top: 8px;
+        }
+
+        .stat-change {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-top: 12px;
+            padding: 4px 10px;
+            border-radius: 20px;
+        }
+
+        .stat-change.positive {
+            background: rgba(16, 185, 129, 0.15);
+            color: var(--success);
+        }
+
+        .stat-change.negative {
+            background: rgba(239, 68, 68, 0.15);
+            color: var(--danger);
+        }
+
+        /* Content Sections */
+        .content-section {
+            display: none;
+        }
+
+        .content-section.active {
+            display: block;
+            animation: fadeInUp 0.4s ease;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Cards */
+        .card {
+            background: linear-gradient(135deg, var(--bg-card) 0%, var(--bg-secondary) 100%);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 28px;
+            margin-bottom: 24px;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .card-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        /* Table */
+        .table-wrapper {
+            overflow-x: auto;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .data-table th,
+        .data-table td {
+            padding: 16px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .data-table th {
+            background: var(--bg-secondary);
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .data-table tr:hover td {
+            background: var(--bg-card-hover);
+        }
+
+        .data-table td {
+            font-size: 14px;
+            color: var(--text-primary);
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 6px 12px;
+            font-size: 12px;
+            font-weight: 600;
+            border-radius: 20px;
+        }
+
+        .badge-success {
+            background: rgba(16, 185, 129, 0.15);
+            color: var(--success);
+        }
+
+        .badge-warning {
+            background: rgba(245, 158, 11, 0.15);
+            color: var(--warning);
+        }
+
+        .badge-danger {
+            background: rgba(239, 68, 68, 0.15);
+            color: var(--danger);
+        }
+
+        .badge-info {
+            background: rgba(59, 130, 246, 0.15);
+            color: var(--accent-primary);
+        }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(4px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal {
+            background: linear-gradient(135deg, var(--bg-card) 0%, var(--bg-secondary) 100%);
+            border: 1px solid var(--border-color);
+            border-radius: 24px;
+            width: 100%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+            animation: modalSlideIn 0.3s ease;
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: scale(0.95) translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 24px 28px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .modal-title {
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .modal-close {
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .modal-close:hover {
+            background: var(--danger);
+            border-color: var(--danger);
+            color: white;
+        }
+
+        .modal-body {
+            padding: 28px;
+        }
+
+        .modal-footer {
+            display: flex;
+            gap: 12px;
+            padding: 20px 28px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        /* Chart Container */
+        .chart-container {
+            background: var(--bg-primary);
+            border-radius: 16px;
+            padding: 24px;
+            border: 1px solid var(--border-color);
+        }
+
+        #attendanceChart {
+            width: 100%;
+            height: 300px;
+        }
+
+        /* Event Card */
+        .event-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+        }
+
+        .event-card {
+            background: linear-gradient(135deg, var(--bg-card) 0%, var(--bg-secondary) 100%);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .event-card:hover {
+            transform: translateY(-4px);
+            border-color: var(--accent-primary);
+            box-shadow: 0 12px 40px rgba(59, 130, 246, 0.15);
+        }
+
+        .event-image {
+            width: 100%;
+            height: 160px;
+            object-fit: cover;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+        }
+
+        .event-content {
+            padding: 20px;
+        }
+
+        .event-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .event-date {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .event-code {
+            font-family: 'Space Grotesk', monospace;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--accent-secondary);
+            background: rgba(6, 182, 212, 0.1);
+            padding: 8px 12px;
+            border-radius: 8px;
+            display: inline-block;
+        }
+
+        /* Code Display */
+        .unique-code {
+            font-family: 'Space Grotesk', monospace;
+            font-size: 24px;
+            font-weight: 700;
+            letter-spacing: 4px;
+            color: var(--accent-secondary);
+            background: var(--bg-primary);
+            padding: 16px 24px;
+            border-radius: 12px;
+            text-align: center;
+            border: 2px dashed var(--border-color);
+                                   }
+
+        /* Toast Notification */
+        .toast-container {
+            position: fixed;
+            top: 24px;
+            right: 24px;
+            z-index: 2000;
+        }
+
+        .toast {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 16px 20px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            animation: toastSlideIn 0.3s ease;
+            min-width: 300px;
+        }
+
+        @keyframes toastSlideIn {
+            from {
+                opacity: 0;
+                transform: translateX(100px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .toast.success {
+            border-left: 4px solid var(--success);
+        }
+
+        .toast.error {
+            border-left: 4px solid var(--danger);
+        }
+
+        /* Mobile Responsive */
+        .mobile-menu-btn {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 200;
+            width: 44px;
+            height: 44px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            color: var(--text-primary);
+            cursor: pointer;
+          }
+
+        @media (max-width: 1024px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .event-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .mobile-menu-btn {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 0;
+                padding: 80px 20px 20px;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .event-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .page-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 16px;
+            }
+        }
+
+        /* Reduced Motion */
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+
+        /* Action Buttons in Table */
+      .action-btns {
+            display: flex;
+            gap: 8px;
+        }
+
+        .action-btn {
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .action-btn:hover {
+            border-color: var(--accent-primary);
+            color: var(--accent-primary);
+        }
+
+        .action-btn.delete:hover {
+            border-color: var(--danger);
+            color: var(--danger);
+        }
+
+        /* File Upload */
+        .file-upload {
+            position: relative;
+            border: 2px dashed var(--border-color);
+            border-radius: 12px;
+            padding: 32px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .file-upload:hover {
+            border-color: var(--accent-primary);
+            background: rgba(59, 130, 246, 0.05);
+        }
+
+        .file-upload input {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        /* Loading Spinner */
+      .spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid transparent;
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+    <!-- Background Effects -->
+    <div class="bg-pattern"></div>
+    <div class="grid-overlay"></div>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- Login Page -->
+    <div class="login-container" id="loginPage">
+        <div class="login-card">
+            <div class="login-logo">27</div>
+            <h2 style="text-align: center; margin-bottom: 8px; font-size: 24px;">Admin OSIS</h2>
+            <p style="text-align: center; color: var(--text-muted); margin-bottom: 32px;">SMAN 27 Garut</p>
+            
+            <form id="loginForm">
+                <div class="form-group">
+                    <label class="form-label">Username</label>
+                    <input type="text" class="form-input" id="osissman27garut" placeholder="Masukkan username" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Password</label>
+                    <input type="password" class="form-input" id="ADMIN123G" placeholder="Masukkan password" required>
+                </div>
+                <button type="submit" class="btn btn-primary" id="loginBtn">
+                    <span>Masuk Dashboard</span>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M5 12h14M12 5l7 7-7 7"/>
+                    </svg>
+                </button>
+            </form>
+            
+            <p style="text-align: center; color: var(--text-muted); font-size: 13px; margin-top: 24px;">
+                Default: admin / admin123
+            </p>
+        </div>
+        </div>
+
+    <!-- Dashboard -->
+    <div class="dashboard-wrapper" id="dashboardWrapper">
+        <!-- Mobile Menu Button -->
+        <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Toggle Menu">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 12h18M3 6h18M3 18h18"/>
+            </svg>
+        </button>
+
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-logo">27</div>
+                <div>
+                    <div class="sidebar-title">OSIS Admin</div>
+                    <div class="sidebar-subtitle">SMAN 27 Garut</div>
+                </div>
+            </div>
+
+            <nav>
+                <div class="nav-section">
+                    <div class="nav-label">Menu Utama</div>
+                    <a class="nav-item active" data-page="dashboard">
+                        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="3" width="7" height="7" rx="1"/>
+                            <rect x="14" y="3" width="7" height="7" rx="1"/>
+                            <rect x="14" y="14" width="7" height="7" rx="1"/>
+                            <rect x="3" y="14" width="7" height="7" rx="1"/>
+                        </svg>
+                        <span>Dashboard</span>
+                    </a>
+                    <a class="nav-item" data-page="anggota">
+                        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                            <circle cx="9" cy="7" r="4"/>
+                            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                        </svg>
+                        <span>Data Anggota</span>
+                    </a>
+                    <a class="nav-item" data-page="absensi">
+                        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M9 11l3 3L22 4"/>
+                            <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+                        </svg>
+                        <span>Absensi Kegiatan</span>
+                    </a>
+                    <a class="nav-item" data-page="event">
+                        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                            <line x1="16" y1="2" x2="16" y2="6"/>
+                            <line x1="8" y1="2" x2="8" y2="6"/>
+                            <line x1="3" y1="10" x2="21" y2="10"/>
+                      </svg>
+                      <span>Event OSIS</span>
+                    </a>
+                    <a class="nav-item" data-page="statistik">
+                        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="18" y1="20" x2="18" y2="10"/>
+                            <line x1="12" y1="20" x2="12" y2="4"/>
+                            <line x1="6" y1="20" x2="6" y2="14"/>
+                        </svg>
+                        <span>Statistik</span>
+                    </a>
+                </div>
+
+                <div class="nav-section">
+                    <div class="nav-label">Akun</div>
+                    <a class="nav-item" id="logoutBtn">
+                        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                            <polyline points="16 17 21 12 16 7"/>
+                            <line x1="21" y1="12" x2="9" y2="12"/>
+                        </svg>
+                        <span>Keluar</span>
+                    </a>
+                </div>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Dashboard Page -->
+            <section class="content-section active" id="page-dashboard">
+                <div class="page-header">
+                    <div>
+                        <h1 class="page-title">Dashboard</h1>
+                        <p class="page-subtitle">Selamat datang di panel admin OSIS SMAN 27 Garut</p>
+                    </div>
+                    <div class="user-menu">
+                        <div class="user-info">
+                            <div class="user-name" id="currentUser">Admin</div>
+                            <div class="user-role">Administrator</div>
+                        </div>
+                        <div class="user-avatar">A</div>
+                    </div>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+                                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                                <circle cx="9" cy="7" r="4"/>
+                            </svg>
+                        </div>
+                        <div class="stat-value" id="totalAnggota">0</div>
+                        <div class="stat-label">Total Anggota</div>
+                        <div class="stat-change positive">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
+                            </svg>
+                            Aktif
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+                                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                                <line x1="16" y1="2" x2="16" y2="6"/>
+                                <line x1="8" y1="2" x2="8" y2="6"/>
+                                <line x1="3" y1="10" x2="21" y2="10"/>
+                            </svg>
+                        </div>
+                        <div class="stat-value" id="totalEvent">0</div>
+                        <div class="stat-label">Total Event</div>
+                        <div class="stat-change positive">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
+                            </svg>
+                            Terlaksana
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+                                <path d="M9 11l3 3L22 4"/>
+                                <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+                            </svg>
+                        </div>
+                        <div class="stat-value" id="totalAbsensi">0</div>
+                        <div class="stat-label">Total Absensi</div>
+                        <div class="stat-change positive">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
+                            </svg>
+                            Tercatat
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+                                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                                <polyline points="22 4 12 14.01 9 11.01"/>
+                            </svg>
+                        </div>
+                        <div class="stat-value" id="avgKehadiran">0%</div>
+                        <div class="stat-label">Rata-rata Kehadiran</div>
+                        <div class="stat-change positive">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
+                            </svg>
+                            Baik
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Grafik Kehadiran Mingguan</h3>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="attendanceChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Aktivitas Terbaru</h3>
+                    </div>
+                    <div id="recentActivity">
+                        <p style="color: var(--text-muted);">Belum ada aktivitas terbaru</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Anggota Page -->
+            <section class="content-section" id="page-anggota">
+                <div class="page-header">
+                    <div>
+                        <h1 class="page-title">Data Anggota OSIS</h1>
+                        <p class="page-subtitle">Kelola data anggota OSIS SMAN 27 Garut</p>
+                    </div>
+                    <button class="btn btn-primary" onclick="openModal('anggotaModal')">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="12" y1="5" x2="12" y2="19"/>
+                            <line x1="5" y1="12" x2="19" y2="12"/>
+                        </svg>
+                        Tambah Anggota
+                    </button>
+                </div>
+
+                <div class="card">
+                    <div class="table-wrapper">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>No</th>
+                                    <th>Nama</th>
+                                    <th>Kelas</th>
+                                    <th>Jabatan</th>
+                                    <th>Status</th>
+                                    <th>Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="anggotaTableBody">
+                            </tbody>
+                                      </table>
+                                      </div>
+                </div>
+            </section>
+
+            <!-- Absensi Page -->
+            <section class="content-section" id="page-absensi">
+                <div class="page-header">
+                    <div>
+                        <h1 class="page-title">Absensi Kegiatan</h1>
+                        <p class="page-subtitle">Catat kehadiran anggota dalam setiap kegiatan</p>
+                    </div>
+                    <button class="btn btn-primary" onclick="openModal('absensiModal')">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="12" y1="5" x2="12" y2="19"/>
+                            <line x1="5" y1="12" x2="19" y2="12"/>
+                        </svg>
+                        Input Absensi
+                    </button>
+                </div>
+
+                <div class="card">
+                    <div class="table-wrapper">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>No</th>
+                                    <th>Nama</th>
+                                    <th>Kegiatan</th>
+                                    <th>Tanggal</th>
+                                    <th>Status</th>
+                                    <th>Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="absensiTableBody">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Event Page -->
+            <section class="content-section" id="page-event">
+                <div class="page-header">
+                    <div>
+                        <h1 class="page-title">Event OSIS</h1>
+                        <p class="page-subtitle">Kelola event dan generate kode unik peserta</p>
+                    </div>
+                    <button class="btn btn-primary" onclick="openModal('eventModal')">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="12" y1="5" x2="12" y2="19"/>
+                            <line x1="5" y1="12" x2="19" y2="12"/>
+                        </svg>
+                        Buat Event
+                    </button>
+                </div>
+
+                <div class="event-grid" id="eventGrid">
+                  </div>
+            </section>
+
+            <!-- Statistik Page -->
+            <section class="content-section" id="page-statistik">
+                <div class="page-header">
+                    <div>
+                        <h1 class="page-title">Statistik Real-time</h1>
+                        <p class="page-subtitle">Analisis data kehadiran dan aktivitas OSIS</p>
+                    </div>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value" id="statHadir">0</div>
+                        <div class="stat-label">Total Hadir</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="statIzin">0</div>
+                        <div class="stat-label">Total Izin</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="statSakit">0</div>
+                        <div class="stat-label">Total Sakit</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="statAlpha">0</div>
+                        <div class="stat-label">Total Alpha</div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Grafik Status Kehadiran</h3>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="statusChart"></canvas>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Anggota Modal -->
+    <div class="modal-overlay" id="anggotaModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">Tambah Anggota</h3>
+                <button class="modal-close" onclick="closeModal('anggotaModal')">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"/>
+                        <line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                </button>
+            </div>
+            <form id="anggotaForm">
+                <div class="modal-body">
+                  <input type="hidden" id="anggotaId">
+                    <div class="form-group">
+                        <label class="form-label">Nama Lengkap</label>
+                        <input type="text" class="form-input" id="anggotaNama" placeholder="Masukkan nama lengkap" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Kelas</label>
+                        <input type="text" class="form-input" id="anggotaKelas" placeholder="Contoh: XII IPA 1" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Jabatan</label>
+                        <select class="form-input" id="anggotaJabatan" required>
+                            <option value="">Pilih Jabatan</option>
+                            <option value="Ketua">Ketua</option>
+                            <option value="Wakil Ketua">Wakil Ketua</option>
+                            <option value="Sekretaris">Sekretaris</option>
+                            <option value="Bendahara">Bendahara</option>
+                            <option value="Koordinator Sie">Koordinator Sie</option>
+                            <option value="Anggota">Anggota</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Status</label>
+                        <select class="form-input" id="anggotaStatus" required>
+                            <option value="Aktif">Aktif</option>
+                            <option value="Tidak Aktif">Tidak Aktif</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('anggotaModal')">Batal</button>
+                    <button type="submit" class="btn btn-primary">Simpan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Absensi Modal -->
+    <div class="modal-overlay" id="absensiModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">Input Absensi</h3>
+                <button class="modal-close" onclick="closeModal('absensiModal')">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"/>
+                        <line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                </button>
+            </div>
+            <form id="absensiForm">
+                <div class="modal-body">
+                    <input type="hidden" id="absensiId">
+                    <div class="form-group">
+                        <label class="form-label">Nama Anggota</label>
+                        <select class="form-input" id="absensiNama" required>
+                            <option value="">Pilih Anggota</option>
+                        </select>
+                        </div>
+                    <div class="form-group">
+                        <label class="form-label">Nama Kegiatan</label>
+                        <input type="text" class="form-input" id="absensiKegiatan" placeholder="Masukkan nama kegiatan" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Tanggal</label>
+                        <input type="date" class="form-input" id="absensiTanggal" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Status Kehadiran</label>
+                        <select class="form-input" id="absensiStatus" required>
+                            <option value="Hadir">Hadir</option>
+                            <option value="Izin">Izin</option>
+                            <option value="Sakit">Sakit</option>
+                            <option value="Alpha">Alpha</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('absensiModal')">Batal</button>
+                    <button type="submit" class="btn btn-primary">Simpan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Event Modal -->
+    <div class="modal-overlay" id="eventModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">Buat Event Baru</h3>
+                <button class="modal-close" onclick="closeModal('eventModal')">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"/>
+                        <line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                </button>
+            </div>
+            <form id="eventForm">
+                <div class="modal-body">
+                    <input type="hidden" id="eventId">
+                    <div class="form-group">
+                        <label class="form-label">Nama Event</label>
+                        <input type="text" class="form-input" id="eventNama" placeholder="Masukkan nama event" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Tanggal Event</label>
+                        <input type="date" class="form-input" id="eventTanggal" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Deskripsi</label>
+                        <textarea class="form-input" id="eventDeskripsi" rows="3" placeholder="Deskripsi event"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Upload Gambar (Opsional)</label>
+                        <div class="file-upload">
+                          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="1.5" style="margin: 0 auto 12px;">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                <polyline points="17 8 12 3 7 8"/>
+                                <line x1="12" y1="3" x2="12" y2="15"/>
+                            </svg>
+                            <p style="color: var(--text-muted); font-size: 14px;">Klik atau drag file untuk upload</p>
+                            <input type="file" id="eventImage" accept="image/*">
+                        </div>
+                        <div id="imagePreview" style="margin-top: 12px; display: none;">
+                            <img id="previewImg" style="max-width: 100%; border-radius: 12px;">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('eventModal')">Batal</button>
+                    <button type="submit" class="btn btn-primary">Buat Event</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Generate Code Modal -->
+    <div class="modal-overlay" id="codeModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">Kode Unik Peserta</h3>
+                <button class="modal-close" onclick="closeModal('codeModal')">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"/>
+                        <line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body" style="text-align: center;">
+                <p style="color: var(--text-muted); margin-bottom: 16px;">Kode unik untuk event:</p>
+                <h4 id="codeEventName" style="margin-bottom: 24px;"></h4>
+                <div class="unique-code" id="generatedCode">XXXXXX</div>
+                <p style="color: var(--text-muted); font-size: 13px; margin-top: 16px;">
+                    Gunakan kode ini untuk registrasi peserta
+                </p>
+            </div>
+            <div class="modal-footer" style="justify-content: center;">
+                <button class="btn btn-secondary" onclick="generateNewCode()">Generate Kode Baru</button>
+                <button class="btn btn-primary" onclick="copyCode()">Salin Kode</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==================== FIREBASE CONFIG ====================
+        // GANTI DENGAN CONFIG FIREBASE ANDA SENDIRI
+        const firebaseConfig = {
+            apiKey: "AIzaSyDYpUnXpwVcczrncTC84-KOZ8SF3gz3ys0",
+            authDomain: "website-osis-7d798.firebaseapp.com",
+            databaseURL: "https://website-osis.firebaseio.com",
+            projectId: "website-osis",
+            storageBucket: "website-osis-7d798.appspot.com",
+          messagingSenderId: "116488937451",
+            appId: "1:116488937451:web:eafd59cc685fd9218503ae"
+        };
+
+        // Initialize Firebase (uncomment jika sudah punya config)
+        // firebase.initializeApp(firebaseConfig);
+        // const database = firebase.database();
+
+        // ==================== DATA STORE (Local Storage Fallback) ====================
+        const DB_KEY = 'osis_dashboard_data';
+        
+        function getData() {
+            const data = localStorage.getItem(DB_KEY);
+            return data ? JSON.parse(data) : {
+                anggota: [],
+                absensi: [],
+                events: [],
+                activities: []
+            };
+        }
+
+        function saveData(data) {
+            localStorage.setItem(DB_KEY, JSON.stringify(data));
+        }
+
+        // Initialize with sample data if empty
+        function initializeData() {
+            let data = getData();
+            if (data.anggota.length === 0) {
+                data.anggota = [
+                    { id: '1', nama: 'Ahmad Sopandi', kelas: 'XI IPA 1', jabatan: 'Ketua', status: 'Aktif' },
+                    { id: '2', nama: 'Ringga Satria', kelas: 'X M 2', jabatan: 'Wakil Ketua', status: 'Aktif' },
+                    { id: '3', nama: 'Lora Cantika Rahayu', kelas: 'XI IPA 1', jabatan: 'Sekretaris', status: 'Aktif' },
+                  { id: '4', nama: 'Rahmi Maulida', kelas: 'X M 5', jabatan: 'Sekretaris', status: 'Aktif' },
+                    { id: '5', nama: 'Alea Sheryl Zaara', kelas: 'XI IPA 1', jabatan: 'Bendahara', status: 'Aktif' },
+                    { id: '6', nama: 'Cindy Natalia', kelas: 'X M 4', jabatan: 'Anggota', status: 'Aktif' }
+                ];
+                data.absensi = [
+                    { id: '1', nama: 'Ahmad Sopandi', kegiatan: 'Rapat Koordinasi SPMB', tanggal: '2026-04-01', status: 'Hadir' },
+                    { id: '2', nama: 'Ringga Satria', kegiatan: 'Rapat Koordinasi', tanggal: '2026-04-01', status: 'Hadir' },
+                    { id: '3', nama: 'Lora C R', kegiatan: 'Rapat Koordinasi', tanggal: '2026-04-01', status: 'Hadir' }
+                  { id: '4', nama: 'Alea S Z', kegiatan: 'Rapat Koordinasi', tanggal: '2026-04-01', status: 'Hadir' }
+                ];
+                data.events = [
+                    { id: '1', nama: 'TEMU SAPA 2026', tanggal: 'To be Announcement', deskripsi: 'Kegiatan silaturahmi dengan sekolah lain yang diringkas dengan diadakan beberapa kegiatan', kode: 'TMSI24', image: '' },
+                    { id: '2', nama: 'Class Meeting S8', tanggal: 'Akhir semester 2', deskripsi: 'Pertandingan antar kelas', kode: 'CM2024', image: '' }
+                  { id: '2', nama: 'Memperingati HUT RI', tanggal: '2026-08-17', deskripsi: 'Pertandingan antar kelas dengan mengenang perjuangan para pahlawan', kode: 'HRTA2024', image: '' }
+                ];
+                saveData(data);
+            }
+        }
+
+        // ==================== AUTHENTICATION ====================
+        const ADMIN_CREDENTIALS = {
+            username: 'osissman27garut',
+            password: 'ADMIN123G'
+          };
+
+        const loginForm = document.getElementById('loginForm');
+        const loginPage = document.getElementById('loginPage');
+        const dashboardWrapper = document.getElementById('dashboardWrapper');
+
+        function checkAuth() {
+            const isLoggedIn = sessionStorage.getItem('osis_logged_in');
+            if (isLoggedIn === 'true') {
+                showDashboard();
+            }
+        }
+
+        function showDashboard() {
+            loginPage.style.display = 'none';
+            dashboardWrapper.style.display = 'block';
+            loadDashboardData();
+        }
+
+        function logout() {
+            sessionStorage.removeItem('osis_logged_in');
+            loginPage.style.display = 'flex';
+            dashboardWrapper.style.display = 'none';
+            showToast('Berhasil keluar dari sistem', 'success');
+        }
+
+        loginForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const username = document.getElementById('loginUsername').value;
+            const password = document.getElementById('loginPassword').value;
+
+            if (username === ADMIN_CREDENTIALS.username && password === ADMIN_CREDENTIALS.password) {
+                sessionStorage.setItem('osis_logged_in', 'true');
+                showDashboard();
+                showToast('Login berhasil! Selamat datang', 'success');
+            } else {
+                showToast('Username atau password salah!', 'error');
+            }
+        });
+
+        document.getElementById('logoutBtn').addEventListener('click', logout);
+
+        // ==================== NAVIGATION ====================
+        const navItems = document.querySelectorAll('.nav-item[data-page]');
+        const contentSections = document.querySelectorAll('.content-section');
+
+        navItems.forEach(item => {
+            item.addEventListener('click', function() {
+                const page = this.getAttribute('data-page');
+                
+                navItems.forEach(nav => nav.classList.remove('active'));
+                this.classList.add('active');
+                
+                contentSections.forEach(section => {
+                    section.classList.remove('active');
+                  if (section.id === `page-${page}`) {
+                        section.classList.add('active');
+                    }
+                });
+
+                // Close mobile menu
+                document.getElementById('sidebar').classList.remove('open');
+            });
+        });
+
+        // Mobile menu toggle
+        document.getElementById('mobileMenuBtn').addEventListener('click', function() {
+            document.getElementById('sidebar').classList.toggle('open');
+        });
+
+        // ==================== MODAL FUNCTIONS ====================
+        function openModal(modalId) {
+            document.getElementById(modalId).classList.add('active');
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+            // Reset forms
+            const form = document.querySelector(`#${modalId} form`);
+            if (form) form.reset();
+        }
+
+        // Close modal on overlay click
+        document.querySelectorAll('.modal-overlay').forEach(overlay => {
+            overlay.addEventListener('click', function(e) {
+                if (e.target === this) {
+                    this.classList.remove('active');
+                }
+            });
+        });
+
+        // ==================== TOAST NOTIFICATIONS ====================
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.innerHTML = `
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="${type === 'success' ? 'var(--success)' : 'var(--danger)'}" stroke-width="2">
+                    ${type === 'success' 
+                        ? '<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>'
+                        : '<circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>'}
+                </svg>
+                <span>${message}</span>
+            `;
+            container.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateX(100px)';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+      }
+
+      // ==================== ANGGOTA CRUD ====================
+        function renderAnggotaTable() {
+            const data = getData();
+            const tbody = document.getElementById('anggotaTableBody');
+            
+            if (data.anggota.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: var(--text-muted);">Belum ada data anggota</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = data.anggota.map((item, index) => `
+                <tr>
+                    <td>${index + 1}</td>
+                    <td>${item.nama}</td>
+                    <td>${item.kelas}</td>
+                    <td>${item.jabatan}</td>
+                    <td><span class="badge ${item.status === 'Aktif' ? 'badge-success' : 'badge-warning'}">${item.status}</span></td>
+                    <td>
+                        <div class="action-btns">
+                            <button class="action-btn" onclick="editAnggota('${item.id}')" title="Edit">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                                </svg>
+                            </button>
+                            <button class="action-btn delete" onclick="deleteAnggota('${item.id}')" title="Hapus">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="3 6 5 6 21 6"/>
+                                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        document.getElementById('anggotaForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const data = getData();
+            const id = document.getElementById('anggotaId').value;
+            const anggota = {
+                id: id || Date.now().toString(),
+                nama: document.getElementById('anggotaNama').value,
+                kelas: document.getElementById('anggotaKelas').value,
+                jabatan: document.getElementById('anggotaJabatan').value,
+                status: document.getElementById('anggotaStatus').value
+            };
+
+            if (id) {
+                // Edit
+                const index = data.anggota.findIndex(a => a.id === id);
+                data.anggota[index] = anggota;
+                showToast('Data anggota berhasil diperbarui', 'success');
+            } else {
+              // Add
+                data.anggota.push(anggota);
+                showToast('Anggota baru berhasil ditambahkan', 'success');
+            }
+
+            saveData(data);
+            renderAnggotaTable();
+            updateStats();
+            updateAnggotaDropdown();
+            closeModal('anggotaModal');
+            addActivity(`Data anggota ${anggota.nama} ${id ? 'diperbarui' : 'ditambahkan'}`);
+        });
+
+        function editAnggota(id) {
+            const data = getData();
+            const anggota = data.anggota.find(a => a.id === id);
+            if (anggota) {
+                document.getElementById('anggotaId').value = anggota.id;
+                document.getElementById('anggotaNama').value = anggota.nama;
+                document.getElementById('anggotaKelas').value = anggota.kelas;
+                document.getElementById('anggotaJabatan').value = anggota.jabatan;
+                document.getElementById('anggotaStatus').value = anggota.status;
+                openModal('anggotaModal');
+            }
+        }
+
+        function deleteAnggota(id) {
+            if (confirm('Apakah Anda yakin ingin menghapus anggota ini?')) {
+                const data = getData();
+                const anggota = data.anggota.find(a => a.id === id);
+                data.anggota = data.anggota.filter(a => a.id !== id);
+                saveData(data);
+                renderAnggotaTable();
+                updateStats();
+                updateAnggotaDropdown();
+                showToast('Anggota berhasil dihapus', 'success');
+                addActivity(`Anggota ${anggota.nama} dihapus`);
+            }
+        }
+
+        // ==================== ABSENSI CRUD ====================
+        function renderAbsensiTable() {
+            const data = getData();
+            const tbody = document.getElementById('absensiTableBody');
+            
+            if (data.absensi.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: var(--text-muted);">Belum ada data absensi</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = data.absensi.map((item, index) => `
+                <tr>
+                    <td>${index + 1}</td>
+                    <td>${item.nama}</td>
+                    <td>${item.kegiatan}</td>
+                    <td>${formatDate(item.tanggal)}</td>
+                    <td><span class="badge ${getBadgeClass(item.status)}">${item.status}</span></td>
+                    <td>
+                        <div class="action-btns">
+                            <button class="action-btn" onclick="editAbsensi('${item.id}')" title="Edit">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                                </svg>
+                            </button>
+                            <button class="action-btn delete" onclick="deleteAbsensi('${item.id}')" title="Hapus">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="3 6 5 6 21 6"/>
+                                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function getBadgeClass(status) {
+            const classes = {
+                'Hadir': 'badge-success',
+                'Izin': 'badge-info',
+                'Sakit': 'badge-warning',
+                'Alpha': 'badge-danger'
+            };
+            return classes[status] || 'badge-info';
+        }
+
+        function formatDate(dateStr) {
+            const options = { day: 'numeric', month: 'long', year: 'numeric' };
+            return new Date(dateStr).toLocaleDateString('id-ID', options);
+        }
+
+        function updateAnggotaDropdown() {
+            const data = getData();
+            const select = document.getElementById('absensiNama');
+            select.innerHTML = '<option value="">Pilih Anggota</option>' +
+                data.anggota.map(a => `<option value="${a.nama}">${a.nama} - ${a.kelas}</option>`).join('');
+        }
+
+        document.getElementById('absensiForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const data = getData();
+            const id = document.getElementById('absensiId').value;
+            const absensi = {
+                id: id || Date.now().toString(),
+                nama: document.getElementById('absensiNama').value,
+                kegiatan: document.getElementById('absensiKegiatan').value,
+                tanggal: document.getElementById('absensiTanggal').value,
+                status: document.getElementById('absensiStatus').value
+            };
+
+            if (id) {
+              const index = data.absensi.findIndex(a => a.id === id);
+                data.absensi[index] = absensi;
+                showToast('Data absensi berhasil diperbarui', 'success');
+            } else {
+                data.absensi.push(absensi);
+                showToast('Absensi berhasil dicatat', 'success');
+            }
+
+            saveData(data);
+            renderAbsensiTable();
+            updateStats();
+            closeModal('absensiModal');
+            addActivity(`Absensi ${absensi.nama} untuk kegiatan ${absensi.kegiatan}`);
+        });
+
+        function editAbsensi(id) {
+            const data = getData();
+            const absensi = data.absensi.find(a => a.id === id);
+            if (absensi) {
+                document.getElementById('absensiId').value = absensi.id;
+                document.getElementById('absensiNama').value = absensi.nama;
+                document.getElementById('absensiKegiatan').value = absensi.kegiatan;
+                document.getElementById('absensiTanggal').value = absensi.tanggal;
+                document.getElementById('absensiStatus').value = absensi.status;
+                openModal('absensiModal');
+            }
+        }
+
+        function deleteAbsensi(id) {
+            if (confirm('Apakah Anda yakin ingin menghapus data absensi ini?')) {
+                const data = getData();
+                data.absensi = data.absensi.filter(a => a.id !== id);
+                saveData(data);
+                renderAbsensiTable();
+                updateStats();
+                showToast('Data absensi berhasil dihapus', 'success');
+            }
+        }
+
+        // ==================== EVENT CRUD ====================
+        function renderEventGrid() {
+            const data = getData();
+            const grid = document.getElementById('eventGrid');
+            
+            if (data.events.length === 0) {
+                grid.innerHTML = '<p style="color: var(--text-muted);">Belum ada event</p>';
+                return;
+            }
+
+            grid.innerHTML = data.events.map(event => `
+                <div class="event-card">
+                    <div class="event-image" ${event.image ? `style="background-image: url('${event.image}'); background-size: cover;"` : ''}></div>
+                    <div class="event-content">
+                    <h4 class="event-title">${event.nama}</h4>
+                        <p class="event-date">${formatDate(event.tanggal)}</p>
+                        <div class="event-code">Kode: ${event.kode}</div>
+                        <div style="display: flex; gap: 8px; margin-top: 16px;">
+                            <button class="btn btn-secondary btn-sm" onclick="showEventCode('${event.id}')">
+                                Lihat Kode
+                            </button>
+                            <button class="action-btn delete" onclick="deleteEvent('${event.id}')" style="flex: 1;">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="3 6 5 6 21 6"/>
+                                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function generateUniqueCode() {
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+            let code = '';
+            for (let i = 0; i < 6; i++) {
+                code += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            return code;
+        }
+
+        document.getElementById('eventForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const data = getData();
+            const event = {
+                id: Date.now().toString(),
+                nama: document.getElementById('eventNama').value,
+                tanggal: document.getElementById('eventTanggal').value,
+                deskripsi: document.getElementById('eventDeskripsi').value,
+                kode: generateUniqueCode(),
+                image: ''
+            };
+
+            // Handle image upload
+            const imageInput = document.getElementById('eventImage');
+            if (imageInput.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    event.image = e.target.result;
+                    data.events.push(event);
+                    saveData(data);
+                    renderEventGrid();
+                    updateStats();
+                    closeModal('eventModal');
+                    showToast('Event berhasil dibuat!', 'success');
+                    addActivity(`Event ${event.nama} dibuat`);
+                };
+                reader.readAsDataURL(imageInput.files[0]);
+            } else {
+                data.events.push(event);
+              saveData(data);
+                renderEventGrid();
+                updateStats();
+                closeModal('eventModal');
+                showToast('Event berhasil dibuat!', 'success');
+                addActivity(`Event ${event.nama} dibuat`);
+            }
+        });
+
+        function showEventCode(id) {
+            const data = getData();
+            const event = data.events.find(e => e.id === id);
+            if (event) {
+                document.getElementById('codeEventName').textContent = event.nama;
+                document.getElementById('generatedCode').textContent = event.kode;
+                document.getElementById('codeModal').dataset.eventId = id;
+                openModal('codeModal');
+            }
+        }
+
+        function generateNewCode() {
+            const newCode = generateUniqueCode();
+            document.getElementById('generatedCode').textContent = newCode;
+            
+            // Update in database
+            const eventId = document.getElementById('codeModal').dataset.eventId;
+            const data = getData();
+            const event = data.events.find(e => e.id === eventId);
+            if (event) {
+                event.kode = newCode;
+                saveData(data);
+                renderEventGrid();
+            }
+        }
+
+        function copyCode() {
+            const code = document.getElementById('generatedCode').textContent;
+            navigator.clipboard.writeText(code).then(() => {
+                showToast('Kode berhasil disalin!', 'success');
+            });
+        }
+
+        function deleteEvent(id) {
+            if (confirm('Apakah Anda yakin ingin menghapus event ini?')) {
+                const data = getData();
+                const event = data.events.find(e => e.id === id);
+                data.events = data.events.filter(e => e.id !== id);
+                saveData(data);
+                renderEventGrid();
+                updateStats();
+                showToast('Event berhasil dihapus', 'success');
+                addActivity(`Event ${event.nama} dihapus`);
+            }
+        }
+
+        // Image preview
+      document.getElementById('eventImage').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('previewImg').src = e.target.result;
+                    document.getElementById('imagePreview').style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // ==================== STATISTICS ====================
+        function updateStats() {
+            const data = getData();
+            
+            // Update dashboard stats
+            document.getElementById('totalAnggota').textContent = data.anggota.length;
+            document.getElementById('totalEvent').textContent = data.events.length;
+            document.getElementById('totalAbsensi').textContent = data.absensi.length;
+            
+            // Calculate attendance percentage
+            const hadir = data.absensi.filter(a => a.status === 'Hadir').length;
+            const percentage = data.absensi.length > 0 
+                ? Math.round((hadir / data.absensi.length) * 100) 
+                : 0;
+            document.getElementById('avgKehadiran').textContent = percentage + '%';
+            
+            // Update statistics page
+            document.getElementById('statHadir').textContent = hadir;
+            document.getElementById('statIzin').textContent = data.absensi.filter(a => a.status === 'Izin').length;
+            document.getElementById('statSakit').textContent = data.absensi.filter(a => a.status === 'Sakit').length;
+            document.getElementById('statAlpha').textContent = data.absensi.filter(a => a.status === 'Alpha').length;
+            
+            // Update charts
+            updateCharts();
+        }
+
+        // ==================== CHARTS ====================
+        let attendanceChart = null;
+        let statusChart = null;
+
+        function updateCharts() {
+            const data = getData();
+            
+            // Weekly attendance chart (simulated data)
+            const ctx1 = document.getElementById('attendanceChart').getContext('2d');
+            const weeklyData = [65, 72, 68, 80, 75, 82, 78];
+            const labels = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'];
+            
+            drawBarChart(ctx1, labels, weeklyData, 'Kehadiran');
+            
+            // Status chart
+            const ctx2 = document.getElementById('statusChart').getContext('2d');
+            const statusData = [
+              data.absensi.filter(a => a.status === 'Hadir').length,
+                data.absensi.filter(a => a.status === 'Izin').length,
+                data.absensi.filter(a => a.status === 'Sakit').length,
+                data.absensi.filter(a => a.status === 'Alpha').length
+            ];
+            const statusLabels = ['Hadir', 'Izin', 'Sakit', 'Alpha'];
+            
+            drawPieChart(ctx2, statusLabels, statusData);
+        }
+
+        function drawBarChart(ctx, labels, data, title) {
+            const canvas = ctx.canvas;
+            const width = canvas.width = canvas.offsetWidth * 2;
+            const height = canvas.height = canvas.offsetHeight * 2;
+            ctx.scale(2, 2);
+            
+            const actualWidth = width / 2;
+            const actualHeight = height / 2;
+            const padding = 40;
+            const barWidth = (actualWidth - padding * 2) / labels.length - 10;
+            const maxValue = Math.max(...data, 100);
+            
+            ctx.clearRect(0, 0, actualWidth, actualHeight);
+            
+            // Draw bars
+            labels.forEach((label, i) => {
+                const barHeight = (data[i] / maxValue) * (actualHeight - padding * 2);
+                const x = padding + i * (barWidth + 10);
+                const y = actualHeight - padding - barHeight;
+                
+                // Gradient
+                const gradient = ctx.createLinearGradient(x, y + barHeight, x, y);
+                gradient.addColorStop(0, '#3b82f6');
+                gradient.addColorStop(1, '#06b6d4');
+                
+                ctx.fillStyle = gradient;
+                ctx.beginPath();
+                ctx.roundRect(x, y, barWidth, barHeight, 4);
+                ctx.fill();
+                
+                // Label
+                ctx.fillStyle = '#64748b';
+                ctx.font = '11px Plus Jakarta Sans';
+                ctx.textAlign = 'center';
+                ctx.fillText(label, x + barWidth / 2, actualHeight - padding + 15);
+                
+                // Value
+                ctx.fillStyle = '#f1f5f9';
+                ctx.font = '12px Space Grotesk';
+                ctx.fillText(data[i], x + barWidth / 2, y - 8);
+            });
+        }
+
+        function drawPieChart(ctx, labels, data) {
+            const canvas = ctx.canvas;
+          const width = canvas.width = canvas.offsetWidth * 2;
+            const height = canvas.height = canvas.offsetHeight * 2;
+            ctx.scale(2, 2);
+            
+            const actualWidth = width / 2;
+            const actualHeight = height / 2;
+            const centerX = actualWidth / 2;
+            const centerY = actualHeight / 2;
+            const radius = Math.min(centerX, centerY) - 60;
+            
+            const total = data.reduce((a, b) => a + b, 0);
+            const colors = ['#10b981', '#3b82f6', '#f59e0b', '#ef4444'];
+            
+            ctx.clearRect(0, 0, actualWidth, actualHeight);
+            
+            if (total === 0) {
+                ctx.fillStyle = '#64748b';
+                ctx.font = '14px Plus Jakarta Sans';
+                ctx.textAlign = 'center';
+                ctx.fillText('Belum ada data', centerX, centerY);
+                return;
+            }
+            
+            let startAngle = -Math.PI / 2;
+            
+            data.forEach((value, i) => {
+                if (value === 0) return;
+                
+                const sliceAngle = (value / total) * 2 * Math.PI;
+                
+                ctx.beginPath();
+                ctx.moveTo(centerX, centerY);
+                ctx.arc(centerX, centerY, radius, startAngle, startAngle + sliceAngle);
+                ctx.closePath();
+                ctx.fillStyle = colors[i];
+                ctx.fill();
+                
+                // Label
+                const labelAngle = startAngle + sliceAngle / 2;
+                const labelX = centerX + (radius + 30) * Math.cos(labelAngle);
+                const labelY = centerY + (radius + 30) * Math.sin(labelAngle);
+                
+                ctx.fillStyle = '#f1f5f9';
+                ctx.font = '12px Plus Jakarta Sans';
+                ctx.textAlign = 'center';
+                ctx.fillText(`${labels[i]}: ${value}`, labelX, labelY);
+                
+                startAngle += sliceAngle;
+            });
+            
+            // Center circle
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, radius * 0.5, 0, 2 * Math.PI);
+            ctx.fillStyle = '#0a0f1a';
+            ctx.fill();
+            
+            ctx.fillStyle = '#f1f5f9';
+          ctx.font = 'bold 24px Space Grotesk';
+            ctx.textAlign = 'center';
+            ctx.fillText(total, centerX, centerY + 8);
+        }
+
+        // ==================== ACTIVITY LOG ====================
+        function addActivity(message) {
+            const data = getData();
+            const activity = {
+                message,
+                timestamp: new Date().toISOString()
+            };
+            data.activities.unshift(activity);
+            if (data.activities.length > 10) {
+                data.activities.pop();
+            }
+            saveData(data);
+            renderActivities();
+        }
+
+        function renderActivities() {
+            const data = getData();
+            const container = document.getElementById('recentActivity');
+            
+            if (data.activities.length === 0) {
+                container.innerHTML = '<p style="color: var(--text-muted);">Belum ada aktivitas terbaru</p>';
+                return;
+            }
+            
+            container.innerHTML = data.activities.map(activity => `
+                <div style="display: flex; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--border-color);">
+                    <div style="width: 8px; height: 8px; background: var(--accent-primary); border-radius: 50%; margin-top: 6px; flex-shrink: 0;"></div>
+                    <div>
+                        <p style="color: var(--text-primary); font-size: 14px;">${activity.message}</p>
+                        <p style="color: var(--text-muted); font-size: 12px; margin-top: 4px;">${new Date(activity.timestamp).toLocaleString('id-ID')}</p>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // ==================== LOAD DASHBOARD DATA ====================
+        function loadDashboardData() {
+            renderAnggotaTable();
+            renderAbsensiTable();
+            renderEventGrid();
+            updateAnggotaDropdown();
+            updateStats();
+            renderActivities();
+        }
+
+        // ==================== INITIALIZE ====================
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeData();
+            checkAuth();
+            
+            // Set default date for absensi
+                                  document.getElementById('absensiTanggal').valueAsDate = new Date();
+        });
+
+        // Resize charts on window resize
+        let resizeTimeout;
+        window.addEventListener('resize', function() {
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(updateCharts, 250);
+        });
+    </script>
+</body>
+</html>
